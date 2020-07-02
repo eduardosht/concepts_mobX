@@ -1,0 +1,123 @@
+MobX
+----------------
+Gerenciador de estado.
+
+Funcionamento: Action -> State ..> Computed values ..> Reactions
+Ou seja, quando realizamos alguma ação, modificamos algum estado. "Toda ação gera uma reação"
+
+Dependências: (dependencies)
+- mobx (o próprio)
+- flutter_mobx (package que recria a variavel, "atualiza") Ex(2)
+(flutter pub get)
+
+Ex:
+------------
+class Counter {
+    Counter() {
+        increment = Action(_increment);
+    }
+
+    Observable _count = Observable(0)
+    int get count => _count.value;
+    Action increment;
+
+    void _increment() {
+        _count.value++;
+    }
+}
+------------
+
+Ex(2):
+------------
+Observer(
+    builder: (_) {
+        return Text('aeww',...)
+    }
+)
+------------
+
+
+Podemos deixar mais legível e enxuto esse código, porém é necessário importar 2 libs: (dev_dependencies)
+- mobx_codegen (usado para reconhecer anotações @action/@observable...)
+- build_runner (usado para gerar os arquivos usando codigo Dart)
+
+Ex:
+------------
+class Counter {
+    @observable
+    int count = 0;
+
+    @action
+    void increment() {
+        count++;
+    }
+}
+------------
+
+Porém é apenas uma anotação. Precisamos usar o gerador de código build_runner.
+
+Como ele funciona?
+
+Adicionamos 'with Store'.
+
+Ex:
+------------
+class Counter with Store { ... }
+------------
+
+O gerador irá gerar um novo arquivo, portanto adicionamos: part "counter.g.dart" (ele usa o nome do arquivo e adiciona um ".g"  ), dizendo que o arquivo faz parte.
+Irá gerar um novo arquivo com nome de classe, adicionando $. Portanto o arquivo gerado ficará com a classe $Counter.
+
+Precisamos mesclar uma classe com a outra, portanto fazemos um mix.
+
+Ex:
+------------
+part "counter.g.dart"
+
+class Counter = _Counter with _$Counter;
+
+Abstract class Counter with Store { ... }
+------------
+
+Por que do Abstract?
+Porque não faz sentido colocarmos uma classe para ser usada como mixin. 
+Podemos seta-la como abstract.
+
+Como rodar esse builder? No CMD: "flutter packages pub run build_runner build(executa uma vez)/watch(listening no arquivo caso tenha mudança)
+
+
+Um exemplo de autorun:
+------------
+part "counter.g.dart"
+
+class Counter = _Counter with _$Counter;
+
+Abstract class Counter with Store {
+    _Counter() {
+        autorun(_) {
+            print(test);
+        }
+    }
+
+    @action
+    void setTest(String value) => test = value;
+
+    @observable
+    String test = "";
+}
+------------
+
+Sempre que algo do "test" for modificado, ele vai cair dentro do autorun(). O valor é atualizado automaticamente.
+
+@computed, o que é?
+Quando quisermos combinar o valor de duas observables.
+
+Ex: campo de e-mail e senha. Cenário: Preciso validar os 2 campos (se tem valor ou não e etc) para desbloquear o botão.
+Sempre precisamos declarar um get em @computed.
+
+Ex:
+------------
+@computed
+bool get isFormValid => email.length > 6 && password.length > 6
+------------
+
