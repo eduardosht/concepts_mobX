@@ -8,7 +8,7 @@ abstract class _LoginStore with Store {
 
   _LoginStore() {
     autorun((_) {
-      print(email);
+//      print(email);
     });
   }
   
